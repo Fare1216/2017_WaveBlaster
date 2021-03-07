@@ -1,0 +1,104 @@
+#include "DxLib.h"
+
+typedef enum{
+	ChageReady,
+	Chage
+}eScene;
+
+int Mouse;
+int mx,my;
+int Scene = ChageReady;
+
+int sum_count;//クリックした回数
+int sum_cflag=0;//クリックのフラグ
+int sum_time=10;//制限時間
+int sum_tflag=0;//時間のフラグ
+int sum_sflag=0;//ゲーム開始のフラグ
+int sum_click,sum_start;//クリックする場所の画像
+int sum_time_gra[11];//ゲームの時間の画像
+char sum_time_char[10][20];//ゲームの時間の画像を読み込むときに使う
+int sum_x=320,sum_y=240,sum_max_x=520,sum_max_y=440;//クリックする場所の座標
+int sum_time_x=0,sum_time_y=0;//時間の画像を表示する座標
+
+void sum_loadgraph();//画像読み込み
+void sum_chage();//ゲームのメインの関数
+void sum_startflag();//クリックしたらゲームをスタートさせる関数
+void sum_timer();//クリックするときの時間
+
+int WINAPI WinMain(HINSTANCE,HINSTANCE,LPSTR,int){
+        ChangeWindowMode(TRUE), DxLib_Init(), SetDrawScreen( DX_SCREEN_BACK ); //ウィンドウモード変更と初期化と裏画面設定
+
+		sum_loadgraph();
+
+        // while(裏画面を表画面に反映, メッセージ処理, 画面クリア)
+        while( ScreenFlip()==0 && ProcessMessage()==0 && ClearDrawScreen()==0 && CheckHitKey(KEY_INPUT_ESCAPE)==0){
+			Mouse =  GetMouseInput();//マウスの入力状態取得
+			GetMousePoint(&mx,&my);//マウスの座標
+
+			switch(Scene){
+				case ChageReady:
+
+					sum_time=10;
+					sum_count=0;
+					sum_sflag=0;
+					Scene = Chage;
+
+					break;
+				case Chage:
+
+					if(sum_sflag==0){
+						sum_startflag();
+					}else if(sum_sflag==1){
+						sum_chage();
+						sum_timer();
+					}
+
+					break;
+
+			}
+
+        }
+        
+        DxLib_End(); // DXライブラリ終了処理
+        return 0;
+} 
+void sum_loadgraph(){
+	sum_click = LoadGraph("WaveBlaster/Click!!.png");
+	sum_start = LoadGraph("WaveBlaster/Start.png");
+	/*for(int i=0;i<=10;i++){
+		sprintf(sum_time_char[i],"WaveBlaster/%d.png",i);
+		sum_time_gra[i]=LoadGraph(sum_time_char[i]);
+	}*/
+}
+void sum_chage(){
+	if(mx>sum_x && mx<sum_max_x && my>sum_y && my<sum_max_y){
+		if((Mouse & MOUSE_INPUT_LEFT) && sum_cflag==0 && sum_tflag!=0){
+			sum_count++;
+			sum_cflag=1;
+		}else if((Mouse & MOUSE_INPUT_LEFT)==0 && sum_cflag==1){
+			sum_cflag=0;
+		}
+	}
+	DrawGraph(sum_x,sum_y,sum_click,TRUE);
+	DrawFormatString(0,0,GetColor(255,255,255),"count=%d",sum_count);
+};
+void sum_startflag(){
+	if(mx>sum_x && mx<sum_max_x && my>sum_y && my<sum_max_y){
+		if(Mouse & MOUSE_INPUT_LEFT){
+			sum_cflag=1;
+			sum_sflag=1;
+		}
+	}
+	DrawGraph(sum_x,sum_y,sum_start,TRUE);
+}
+void sum_timer(){
+	if(sum_time>0){
+		sum_tflag++;
+	}
+	if(sum_tflag==60){
+		sum_time--;
+		sum_tflag=0;
+	}
+	DrawFormatString(0,20,GetColor(255,255,255),"time=%d",sum_time);
+	//DrawGraph(sum_time_x,sum_time_y,sum_time_gra[sum_time],TRUE);
+}

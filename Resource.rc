@@ -1,0 +1,2 @@
+#include "Resource.h"
+ID_ICON ICON "WaveBlaster/icon.ico"
